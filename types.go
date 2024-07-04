@@ -1,7 +1,8 @@
 package main
 
 type Task struct {
-	ID      string `db:"id" json:"id"`
+	ID string `db:"id" json:"id"`
+
 	Date    string `db:"date" json:"date"`
 	Title   string `db:"title" json:"title"`
 	Comment string `db:"comment" json:"comment"`

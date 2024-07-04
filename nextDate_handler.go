@@ -68,7 +68,9 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 		if len(repeatParts) != 2 {
 			return "", errors.New("invalid day repeat rule")
 		}
+
 		days, err = strconv.Atoi(repeatParts[1])
+
 		if err != nil || days <= 0 || days > 400 {
 			return "", errors.New("invalid day interval")
 		}

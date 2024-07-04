@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"strconv"
 	"strings"
+
 	"time"
 )
 
@@ -20,7 +22,9 @@ func taskAsDoneHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 
 	// Проверяем, что id не пустой
+
 	if id == "" {
+
 		erresponse := ErrorResponse{Error: "Не указан идентификатор"}
 		sendErrorResponse(w, http.StatusBadRequest, erresponse)
 		return
@@ -37,6 +41,7 @@ func taskAsDoneHandler(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, http.StatusNotFound, response)
 		return
 	}
+
 	now := time.Now()
 	nowDate := now.Format("20060102")
 	taskDate := task.Date
@@ -45,6 +50,7 @@ func taskAsDoneHandler(w http.ResponseWriter, r *http.Request) {
 	if task.Repeat != "" {
 
 		nextDate, err := NextDate(now, taskDate, task.Repeat)
+
 		if err != nil {
 			response := ErrorResponse{Error: fmt.Sprintf("Failed to calculate next date: %s", err.Error())}
 			sendErrorResponse(w, http.StatusInternalServerError, response)

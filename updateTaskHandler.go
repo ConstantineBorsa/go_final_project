@@ -20,7 +20,9 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// Проверяем обязательное поле ID
+
 	if task.ID == "" {
+
 		response := ErrorResponse{Error: "Не указан идентификатор задачи (ID)"}
 		sendErrorResponse(w, http.StatusBadRequest, response)
 		return

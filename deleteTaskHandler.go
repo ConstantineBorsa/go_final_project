@@ -3,15 +3,18 @@ package main
 import (
 	"log"
 	"net/http"
+
 	"strconv"
 )
 
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	// Получаем значение параметра id из запроса
+
 	idStr := r.URL.Query().Get("id")
 
 	// Проверяем, что id не пустой
 	if idStr == "" || idStr == "0" {
+
 		erresponse := ErrorResponse{Error: "Не указан идентификатор"}
 		sendErrorResponse(w, http.StatusBadRequest, erresponse)
 		return
@@ -29,6 +32,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	deleteSQL := `DELETE FROM scheduler WHERE id = ?`
 	result, err := DB.Exec(deleteSQL, id)
 	if err != nil {
+
 		log.Printf("Failed to delete task from database: %v\n", err)
 		response := ErrorResponse{Error: "Ошибка при удалении задачи"}
 		sendErrorResponse(w, http.StatusInternalServerError, response)
