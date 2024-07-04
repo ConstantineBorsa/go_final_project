@@ -12,6 +12,8 @@ import (
 
 var DB *sqlx.DB
 
+const defaultPort = "7540"
+
 func main() {
 
 	// Определение пути к базе данных
@@ -98,14 +100,14 @@ func main() {
 
 	http.Handle("/", fs)
 
-	port1 := os.Getenv("TODO_PORT")
-	if port1 == "" {
-		port1 = "7540"
+	addr := os.Getenv("TODO_PORT")
+	if addr == "" {
+		addr = defaultPort
 	}
-	port1 = ":" + port1
+	addr = ":" + addr
 
-	log.Printf("Запуск сервера на порту %s...\n", port1)
-	if err := http.ListenAndServe(port1, nil); err != nil {
+	log.Printf("Запуск сервера на порту %s...\n", addr)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Ошибка запуска сервера: %v\n", err)
 	}
 }

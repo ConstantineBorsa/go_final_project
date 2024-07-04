@@ -11,10 +11,6 @@ import (
 )
 
 func handleAddTask(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
 
 	var task Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -82,14 +78,4 @@ func handleAddTask(w http.ResponseWriter, r *http.Request) {
 	// Возвращаем успешный ответ с ID
 	response := map[string]int{"id": int(id)}
 	sendResponse(w, http.StatusCreated, response)
-}
-
-func sendResponse(w http.ResponseWriter, status int, data interface{}) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
-}
-
-func sendErrorResponse(w http.ResponseWriter, status int, response ErrorResponse) {
-	sendResponse(w, status, response)
 }
