@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
-func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
+func AddTask(w http.ResponseWriter, r *http.Request) {
 
 	var task Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -18,15 +20,6 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer r.Body.Close()
-
-	// Проверяем обязательное поле ID
-
-	if task.ID == "" {
-
-		response := ErrorResponse{Error: "Не указан идентификатор задачи (ID)"}
-		sendErrorResponse(w, http.StatusBadRequest, response)
-		return
-	}
 
 	// Проверяем обязательное поле Title
 	if task.Title == "" {
@@ -51,7 +44,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Если дата задачи меньше текущей, вычисляем следующую дату выполнения
 	if parsedDate.Before(time.Now()) {
 		if task.Repeat != "" {
-			nextDate, err := NextDate(time.Now(), date, task.Repeat)
+			nextDate, err := nextDate(time.Now(), date, task.Repeat)
 			if err != nil {
 				response := ErrorResponse{Error: fmt.Sprintf("Failed to calculate next date: %s", err.Error())}
 				sendErrorResponse(w, http.StatusBadRequest, response)
@@ -63,31 +56,26 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Выполняем SQL-запрос для обновления задачи
-	updateSQL := `UPDATE scheduler SET date=?, title=?, comment=?, repeat=? WHERE id=?`
-	result, err := DB.Exec(updateSQL, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	// Выполняем SQL-запрос для добавления задачи
+	insertSQL := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
+	result, err := DB.Exec(insertSQL, task.Date, task.Title, task.Comment, task.Repeat)
 	if err != nil {
-		log.Printf("Failed to update task in database: %v\n", err)
-		response := ErrorResponse{Error: "Failed to update task in database"}
+		log.Printf("Failed to insert task into database: %v\n", err)
+		response := ErrorResponse{Error: "Failed to insert task into database"}
 		sendErrorResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	// Получаем идентификатор добавленной задачи
+	id, err := result.LastInsertId()
 	if err != nil {
-		log.Printf("Failed to get rows affected: %v\n", err)
-		response := ErrorResponse{Error: "Failed to get rows affected"}
+		log.Printf("Failed to retrieve last insert ID: %v\n", err)
+		response := ErrorResponse{Error: "Failed to retrieve last insert ID"}
 		sendErrorResponse(w, http.StatusInternalServerError, response)
 		return
 	}
 
-	// Проверяем, была ли обновлена хотя бы одна запись
-	if rowsAffected == 0 {
-		response := ErrorResponse{Error: "Задача не найдена"}
-		sendErrorResponse(w, http.StatusNotFound, response)
-		return
-	}
-
-	// Возвращаем успешный ответ
-	sendResponse(w, http.StatusOK, map[string]string{})
+	// Возвращаем успешный ответ с ID
+	response := map[string]int{"id": int(id)}
+	sendResponse(w, http.StatusCreated, response)
 }

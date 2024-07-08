@@ -1,4 +1,10 @@
-package main
+package handlers
+
+import (
+	"github.com/jmoiron/sqlx"
+)
+
+var DB *sqlx.DB
 
 type Task struct {
 	ID string `db:"id" json:"id"`

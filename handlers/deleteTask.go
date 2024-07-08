@@ -1,13 +1,12 @@
-package main
+package handlers
 
 import (
 	"log"
 	"net/http"
-
 	"strconv"
 )
 
-func deleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(w http.ResponseWriter, r *http.Request) {
 	// Получаем значение параметра id из запроса
 
 	idStr := r.URL.Query().Get("id")

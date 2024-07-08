@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"errors"
@@ -11,7 +11,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func nextDateHandler(w http.ResponseWriter, r *http.Request) {
+const maxDays = 400
+
+func NextDate(w http.ResponseWriter, r *http.Request) {
 	nowStr := r.URL.Query().Get("now")
 	dateStr := r.URL.Query().Get("date")
 	repeat := r.URL.Query().Get("repeat")
@@ -27,7 +29,7 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nextDate, err := NextDate(now, dateStr, repeat)
+	nextDate, err := nextDate(now, dateStr, repeat)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -36,7 +38,7 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, nextDate)
 }
 
-func NextDate(now time.Time, date string, repeat string) (string, error) {
+func nextDate(now time.Time, date string, repeat string) (string, error) {
 	// Парсим исходную дату
 	startDate, err := time.Parse("20060102", date)
 	if err != nil {
@@ -71,7 +73,7 @@ func NextDate(now time.Time, date string, repeat string) (string, error) {
 
 		days, err = strconv.Atoi(repeatParts[1])
 
-		if err != nil || days <= 0 || days > 400 {
+		if err != nil || days <= 0 || days > maxDays {
 			return "", errors.New("invalid day interval")
 		}
 		nextDate = startDate.AddDate(0, 0, days)

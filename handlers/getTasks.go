@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -7,11 +7,12 @@ import (
 	"time"
 )
 
-func getTasksHandler(w http.ResponseWriter, r *http.Request) {
+const tasksLimit = 50
+
+func GetTasks(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Entered getTasksHandler")
 	// Задаем лимит на количество возвращаемых задач
-	const limit = 50
 
 	// Получаем текущую дату для фильтрации задач
 	now := time.Now().Format("20060102")
@@ -19,7 +20,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 	// Запрос к базе данных для получения задач
 	tasks := []Task{}
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE date >= ? ORDER BY date ASC LIMIT ?`
-	err := DB.Select(&tasks, query, now, limit)
+	err := DB.Select(&tasks, query, now, tasksLimit)
 	if err != nil {
 		erresponse := ErrorResponse{Error: "Ошибка запроса к базе данных"}
 		sendErrorResponse(w, http.StatusInternalServerError, erresponse)

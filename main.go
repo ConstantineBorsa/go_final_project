@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	h "github.com/ConstantineBorsa/go_final_project/handlers"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -51,11 +53,11 @@ func main() {
 
 	if install {
 		createTableSQL := `CREATE TABLE IF NOT EXISTS scheduler (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            title TEXT NOT NULL,
-            comment TEXT,
-            repeat TEXT CHECK (length(repeat) <= 128)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        title TEXT NOT NULL,
+        comment TEXT,
+        repeat TEXT CHECK (length(repeat) <= 128)
         );`
 
 		_, err = DB.Exec(createTableSQL)
@@ -79,24 +81,24 @@ func main() {
 	webDir := "./web"
 	fs := http.FileServer(http.Dir(webDir))
 
-	http.HandleFunc("/api/nextdate", nextDateHandler)
-	http.HandleFunc("/api/tasks", getTasksHandler)
+	http.HandleFunc("/api/nextdate", h.NextDate)
+	http.HandleFunc("/api/tasks", h.GetTasks)
 	http.HandleFunc("/api/task", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			getTaskHandler(w, r)
+			h.GetTask(w, r)
 		case http.MethodPost:
-			handleAddTask(w, r)
+			h.AddTask(w, r)
 		case http.MethodPut:
-			updateTaskHandler(w, r)
+			h.UpdateTask(w, r)
 		case http.MethodDelete:
 
-			deleteTask(w, r)
+			h.DeleteTask(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	http.HandleFunc("/api/task/done", taskAsDoneHandler)
+	http.HandleFunc("/api/task/done", h.TaskAsDone)
 
 	http.Handle("/", fs)
 

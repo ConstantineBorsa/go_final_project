@@ -1,17 +1,15 @@
-package main
+package handlers
 
 import (
 	"fmt"
 	"log"
 	"net/http"
-
 	"strconv"
 	"strings"
-
 	"time"
 )
 
-func taskAsDoneHandler(w http.ResponseWriter, r *http.Request) {
+func TaskAsDone(w http.ResponseWriter, r *http.Request) {
 	// Проверяем метод запроса
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -49,7 +47,7 @@ func taskAsDoneHandler(w http.ResponseWriter, r *http.Request) {
 	// Если задача периодическая, вычисляем следующую дату выполнения
 	if task.Repeat != "" {
 
-		nextDate, err := NextDate(now, taskDate, task.Repeat)
+		nextDate, err := nextDate(now, taskDate, task.Repeat)
 
 		if err != nil {
 			response := ErrorResponse{Error: fmt.Sprintf("Failed to calculate next date: %s", err.Error())}
