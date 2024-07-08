@@ -12,8 +12,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sqlx.DB
-
 const defaultPort = "7540"
 
 func main() {
@@ -45,7 +43,7 @@ func main() {
 	// если install равен true, после открытия БД требуется выполнить
 	// sql-запрос с CREATE TABLE и CREATE INDEX
 
-	DB, err = sqlx.Connect("sqlite3", dbFile)
+	db, err := sqlx.Connect("sqlite3", dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,14 +58,14 @@ func main() {
         repeat TEXT CHECK (length(repeat) <= 128)
         );`
 
-		_, err = DB.Exec(createTableSQL)
+		_, err = db.Exec(createTableSQL)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		createIndexSQL := `CREATE INDEX IF NOT EXISTS idx_date ON scheduler (date);`
 
-		_, err = DB.Exec(createIndexSQL)
+		_, err = db.Exec(createIndexSQL)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -82,23 +80,27 @@ func main() {
 	fs := http.FileServer(http.Dir(webDir))
 
 	http.HandleFunc("/api/nextdate", h.NextDate)
-	http.HandleFunc("/api/tasks", h.GetTasks)
+	http.HandleFunc("/api/tasks", func(w http.ResponseWriter, r *http.Request) {
+		h.GetTasks(w, r, db)
+	})
 	http.HandleFunc("/api/task", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			h.GetTask(w, r)
+			h.GetTask(w, r, db)
 		case http.MethodPost:
-			h.AddTask(w, r)
+			h.AddTask(w, r, db)
 		case http.MethodPut:
-			h.UpdateTask(w, r)
+			h.UpdateTask(w, r, db)
 		case http.MethodDelete:
 
-			h.DeleteTask(w, r)
+			h.DeleteTask(w, r, db)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	http.HandleFunc("/api/task/done", h.TaskAsDone)
+	http.HandleFunc("/api/task/done", func(w http.ResponseWriter, r *http.Request) {
+		h.TaskAsDone(w, r, db)
+	})
 
 	http.Handle("/", fs)
 

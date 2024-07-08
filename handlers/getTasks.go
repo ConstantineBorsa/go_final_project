@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const tasksLimit = 50
 
-func GetTasks(w http.ResponseWriter, r *http.Request) {
+func GetTasks(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	log.Println("Entered getTasksHandler")
 	// Задаем лимит на количество возвращаемых задач
@@ -20,7 +22,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	// Запрос к базе данных для получения задач
 	tasks := []Task{}
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE date >= ? ORDER BY date ASC LIMIT ?`
-	err := DB.Select(&tasks, query, now, tasksLimit)
+	err := db.Select(&tasks, query, now, tasksLimit)
 	if err != nil {
 		erresponse := ErrorResponse{Error: "Ошибка запроса к базе данных"}
 		sendErrorResponse(w, http.StatusInternalServerError, erresponse)

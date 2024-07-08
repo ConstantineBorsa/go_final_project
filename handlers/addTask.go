@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func AddTask(w http.ResponseWriter, r *http.Request) {
+func AddTask(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	var task Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -29,10 +30,11 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Проверяем формат даты и преобразуем в формат 20060102
-	date := task.Date
-	if date == "" {
-		date = time.Now().Format("20060102")
+
+	if task.Date == "" {
+		task.Date = time.Now().Format("20060102")
 	}
+	date := task.Date
 
 	parsedDate, err := time.Parse("20060102", date)
 	if err != nil {
@@ -58,7 +60,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 
 	// Выполняем SQL-запрос для добавления задачи
 	insertSQL := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
-	result, err := DB.Exec(insertSQL, task.Date, task.Title, task.Comment, task.Repeat)
+	result, err := db.Exec(insertSQL, task.Date, task.Title, task.Comment, task.Repeat)
 	if err != nil {
 		log.Printf("Failed to insert task into database: %v\n", err)
 		response := ErrorResponse{Error: "Failed to insert task into database"}

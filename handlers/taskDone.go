@@ -7,9 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func TaskAsDone(w http.ResponseWriter, r *http.Request) {
+func TaskAsDone(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	// Проверяем метод запроса
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -33,7 +35,7 @@ func TaskAsDone(w http.ResponseWriter, r *http.Request) {
 	// Получаем задачу из базы данных для дальнейших операций
 	var task Task
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
-	if err := DB.Get(&task, query, id); err != nil {
+	if err := db.Get(&task, query, id); err != nil {
 		log.Printf("Failed to retrieve task from database: %v\n", err)
 		response := ErrorResponse{Error: "Задача не найдена"}
 		sendErrorResponse(w, http.StatusNotFound, response)
@@ -68,7 +70,7 @@ func TaskAsDone(w http.ResponseWriter, r *http.Request) {
 
 		// Обновляем дату задачи
 		updateSQL := `UPDATE scheduler SET date = ? WHERE id = ?`
-		if _, err = DB.Exec(updateSQL, nextDate, id); err != nil {
+		if _, err = db.Exec(updateSQL, nextDate, id); err != nil {
 			log.Printf("Failed to update task date in database: %v\n", err)
 			response := ErrorResponse{Error: "Ошибка при обновлении даты задачи"}
 			sendErrorResponse(w, http.StatusInternalServerError, response)
@@ -77,7 +79,7 @@ func TaskAsDone(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// Если значение repeat пустое, удаляем задачу из базы данных
 		deleteSQL := `DELETE FROM scheduler WHERE id = ?`
-		if _, err = DB.Exec(deleteSQL, id); err != nil {
+		if _, err = db.Exec(deleteSQL, id); err != nil {
 			log.Printf("Failed to delete task from database: %v\n", err)
 			response := ErrorResponse{Error: "Ошибка при удалении задачи"}
 			sendErrorResponse(w, http.StatusInternalServerError, response)

@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
+func GetTask(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	// Получаем значение параметра id из запроса
 	id := r.URL.Query().Get("id")
 
@@ -20,7 +22,7 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 	// Запрос к базе данных для получения задачи по идентификатору
 	var task Task
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
-	err := DB.Get(&task, query, id)
+	err := db.Get(&task, query, id)
 	if err != nil {
 		erresponse := ErrorResponse{Error: "Задача не найдена"}
 		sendErrorResponse(w, http.StatusNotFound, erresponse)

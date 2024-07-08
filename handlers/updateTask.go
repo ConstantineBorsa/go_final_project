@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func UpdateTask(w http.ResponseWriter, r *http.Request) {
+func UpdateTask(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 
 	var task Task
 	err := json.NewDecoder(r.Body).Decode(&task)
@@ -65,7 +67,7 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) {
 
 	// Выполняем SQL-запрос для обновления задачи
 	updateSQL := `UPDATE scheduler SET date=?, title=?, comment=?, repeat=? WHERE id=?`
-	result, err := DB.Exec(updateSQL, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	result, err := db.Exec(updateSQL, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
 	if err != nil {
 		log.Printf("Failed to update task in database: %v\n", err)
 		response := ErrorResponse{Error: "Failed to update task in database"}

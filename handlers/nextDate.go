@@ -39,6 +39,9 @@ func NextDate(w http.ResponseWriter, r *http.Request) {
 }
 
 func nextDate(now time.Time, date string, repeat string) (string, error) {
+	if date == "" {
+		return "", errors.New("date cannot be empty")
+	}
 	// Парсим исходную дату
 	startDate, err := time.Parse("20060102", date)
 	if err != nil {

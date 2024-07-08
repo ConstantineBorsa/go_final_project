@@ -4,9 +4,11 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func DeleteTask(w http.ResponseWriter, r *http.Request) {
+func DeleteTask(w http.ResponseWriter, r *http.Request, db *sqlx.DB) {
 	// Получаем значение параметра id из запроса
 
 	idStr := r.URL.Query().Get("id")
@@ -29,7 +31,7 @@ func DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	// Удаляем задачу из базы данных
 	deleteSQL := `DELETE FROM scheduler WHERE id = ?`
-	result, err := DB.Exec(deleteSQL, id)
+	result, err := db.Exec(deleteSQL, id)
 	if err != nil {
 
 		log.Printf("Failed to delete task from database: %v\n", err)
